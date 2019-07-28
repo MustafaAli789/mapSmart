@@ -5,6 +5,8 @@ function createMap(){
 		zoom: 10
 	})
 	infoWindow = new google.maps.InfoWindow;
+	var input = document.getElementById("searchBox");
+	var searchBox = new google.maps.places.SearchBox(input);
 
 	//Utilizing HTML5 Geolocation to get users current location
 	if(navigator.geolocation){
