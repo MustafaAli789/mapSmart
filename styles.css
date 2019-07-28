@@ -1,0 +1,16 @@
+.searchRow, .mapRow{
+	margin-top: 1rem;
+}
+
+.titleRow .display-4{
+	text-align: center;
+}
+
+.searchRow input{
+	width: 68%;
+}
+
+#map{
+	width: 100%;
+	height: 400px;
+}
