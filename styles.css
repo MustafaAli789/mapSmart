@@ -23,3 +23,15 @@
 	cursor: pointer;
 	color: grey;
 }
+.mapRow button{
+	width: 2.5rem;
+	height: 2.5rem;
+	margin: 5px 0 5px 0;
+}
+@media only screen and (max-width: 992px) {
+    .mapRow button{
+    	margin: 5px 5px 10px 5px;
+    	width: 33%;
+    }
+  }
+}

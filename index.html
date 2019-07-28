@@ -7,7 +7,6 @@
 
 	<!-- Font Awesome -->
 	<link rel="stylesheet" type="text/css" href="static/lib/fontawesome/css/all.css">
-
 	
 	<!-- Bootstrap Jquery -->
 	<script type="text/javascript" src="static/lib/bootstrap-4.3.1-dist/js/bootstrap.js"></script>
@@ -49,7 +48,11 @@
 			</div>
 		</div>
 		<div class="row mapRow">
-			<div class="col-lg-2 col-sm-12"></div>
+			<div class="col-lg-2 col-sm-12 d-flex justify-lg-content-start align-items-lg-end flex-lg-column flex-sm-row">
+				<button data-toggle="tooltip" title="Add" type="button" class="addBtn btn btn-outline-dark"><i class="fas fa-plus"></i></button>
+				<button data-toggle="tooltip" title="Define Bounds" type="button" class="centerBtn btn btn-outline-dark"><i class="fab fa-centercode"></i></button>
+				<button data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+			</div>
 			<div class="col-lg-8 col-sm-12 map">
 				<div id="map"></div>
 			</div>
