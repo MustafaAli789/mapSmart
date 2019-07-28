@@ -1,9 +1,10 @@
-var map;
+var map, infoWindow;
 function createMap(){
 	map = new google.maps.Map(document.getElementById("map"), {
 		center: {lat: 45.4215, lng: -75.6972},
 		zoom: 10
 	})
+	infoWindow = new google.maps.InfoWindow;
 
 	//Utilizing HTML5 Geolocation to get users current location
 	if(navigator.geolocation){
@@ -13,6 +14,9 @@ function createMap(){
 				lng: pos.coords.longitude
 			};
 			map.panTo(usersPos);
+			infoWindow.setContent("Your location");
+			infoWindow.setPosition(usersPos);
+			infoWindow.open(map);
 		}, function(){
 			//User has denied location access
 			handleLocationError(true, map.getCenter());
@@ -23,10 +27,14 @@ function createMap(){
 	}
 }
 
-function handleLocationError(gelocationInBrowser, position){
-	if(geolocationInBrowser)
-		console.log("User has denied location access, centering map on Ottawa.");
-	else
-		console.log("Browser does not support gelocation service. Centering map on Ottawa");
+function handleLocationError(geolocationInBrowser, position){
+	if(geolocationInBrowser){
+		infoWindow.setContent("Location access denied. Centering on Ottawa");
+	}
+	else{
+		infoWindow.setContent("Geolocation not supported. Centering on Ottawa");
+	}
+	infoWindow.setPosition(position);
+	infoWindow.open(map);
 	map.panTo(pos);
 }
