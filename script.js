@@ -1,4 +1,6 @@
 var map, infoWindow, markers;
+const selectDestination = document.getElementById("defaultCheck1");
+
 function createMap(){
 	map = new google.maps.Map(document.getElementById("map"), {
 		center: {lat: 45.4215, lng: -75.6972},
@@ -15,7 +17,7 @@ function createMap(){
 		searchBox.setBounds(map.getBounds());
 	});
 
-	//upon detecting a location has been searched for and clicked
+	//upon detecting a location has been searched by clicking on one or pressing enter
 	searchBox.addListener("places_changed", function(){
 		var placesFound = searchBox.getPlaces();
 
@@ -28,23 +30,27 @@ function createMap(){
 		markers=[];
 
 		var bounds = new google.maps.LatLngBounds();
+		let placesToDisplay = 1;
 
-		console.log(placesFound);
+		selectDestination.checked===true ? placesToDisplay=placesFound.length : placesToDisplay=1;
 
-		//creating a marker at each place that is found
-		placesFound.forEach((place)=>{
-			if(!place.geometry)
+		debugger;
+
+		//creating markers at each place found and putting them at respective location
+		for(var i = 0; i<placesToDisplay; i++){
+			if(!placesFound[i].geometry)
 				return;
-			markers.push(createMarker(map, place.geometry.location, place.name))
+
+			markers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name))
 
 			//To fit all markers within bounds of map
-			if (place.geometry.viewport) {
+			if (placesFound[i].geometry.viewport) {
 	      		// Only geocodes have viewport.
-	      		bounds.union(place.geometry.viewport);
+	      		bounds.union(placesFound[i].geometry.viewport);
 	    	} else {
-	      		bounds.extend(place.geometry.location);
+	      		bounds.extend(placesFound[i].geometry.location);
 	    	}
-		});
+		};
 
     	map.fitBounds(bounds);
 
@@ -72,7 +78,7 @@ function createMap(){
 }
 
 function createMarker(map, pos, title){
-	return new google.maps.Marker({position: pos, map: map})
+	return new google.maps.Marker({position: pos, map: map, title: title})
 }
 
 function handleLocationError(geolocationInBrowser, position){
