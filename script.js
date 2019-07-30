@@ -98,7 +98,14 @@ function createMap(){
 }
 
 function createMarker(map, pos, title, icon, label){
-	return new google.maps.Marker({position: pos, map: map, title: title, icon: icon,label: label})
+	let marker = new google.maps.Marker({position: pos, map: map, title: title, icon: icon,label: label});
+	let infoWindow = new google.maps.InfoWindow({
+		content: title
+	});
+	marker.addListener("click", function(){
+		infoWindow.open(map, marker);
+	});
+	return marker;
 }
 
 function handleLocationError(geolocationInBrowser, position){
