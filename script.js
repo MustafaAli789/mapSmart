@@ -3,6 +3,9 @@ var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
 const selectDestination = document.getElementById("defaultCheck1");
 const addBtn = document.getElementById("addBtn");
+const centerBtn = document.getElementById("centerBtn");
+const showAllBtn = document.getElementById("showAllBtn");
+
 var startingPointLabels = 0;
 
 function createMap(){
@@ -123,4 +126,18 @@ addBtn.addEventListener("click", ()=>{
 		if(markerDoesntExist) 
 			startingPointMarkers.push(createMarker(map,currentLocationMarkers[0].position, currentLocationMarkers[0].title, null, (startingPointLabels++).toString(10)));
 	}
+});
+
+//pans the map to the current selected location
+centerBtn.addEventListener("click", ()=>{
+	map.panTo(currentLocationMarkers[0].position);
+});
+
+//fit all visible markers in the view of the map
+showAllBtn.addEventListener("click", ()=>{
+	let bounds = new google.maps.LatLngBounds();
+	startingPointMarkers.forEach((marker)=>{
+		bounds.extend(marker.position);
+	});
+	map.fitBounds(bounds);
 });
