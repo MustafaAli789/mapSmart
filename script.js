@@ -100,9 +100,28 @@ function createMap(){
 function createMarker(map, pos, title, icon, label){
 	let marker = new google.maps.Marker({position: pos, map: map, title: title, icon: icon,label: label});
 	let infoWindow = new google.maps.InfoWindow({
-		content: title
+		content: " "
 	});
 	marker.addListener("click", function(){
+		let contentString = `
+		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
+		<div style="display: flex; justify-content: space-around">
+				<button style="margin: 10px;" data-toggle="tooltip" title="Remove" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
+				<button style="margin: 10px;" data-toggle="tooltip" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+		</div>
+		`;
+		//if its a current location marker, does not need remove button as well
+		if(icon===currentLocationIcon){
+			contentString=`
+			<div class="display-5" style="text-align: center;">${title}</div>
+			<div style="display: flex; justify-content: space-around">
+				<button style="margin: 10px;" data-toggle="tooltip" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+			</div>
+			`;
+		}
+		infoWindow.setContent(contentString);
 		infoWindow.open(map, marker);
 	});
 	return marker;
