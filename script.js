@@ -2,7 +2,8 @@ var map, infoWindow, currentLocationMarkers, destinationMarkers, startingPointMa
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
 const selectDestination = document.getElementById("defaultCheck1");
-
+const addBtn = document.getElementById("addBtn");
+var startingPointLabels = 0;
 
 function createMap(){
 	map = new google.maps.Map(document.getElementById("map"), {
@@ -13,7 +14,9 @@ function createMap(){
 	var searchBox = new google.maps.places.SearchBox(input);
 
 	//no markers assigned as of yet
-	startingPointMarkers = destinationMarkers = currentLocationMarkers = [];
+	startingPointMarkers = []; 
+	destinationMarkers = [];
+	currentLocationMarkers = [];
 
 	//biasing the search box to look within the current bounds of the map
 	map.addListener("bounds_changed", function(){
@@ -54,9 +57,9 @@ function createMap(){
 				return;
 
 			if(selectDestination.checked===true){
-				destinationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon));
+				destinationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null));
 			} else{
-				currentLocationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon));
+				currentLocationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon, null));
 			}
 
 			//To fit all markers within bounds of map
@@ -80,7 +83,7 @@ function createMap(){
 				lng: pos.coords.longitude
 			};
 			map.panTo(usersPos);
-			currentLocationMarkers.push(createMarker(map,usersPos, "Your Location", currentLocationIcon));
+			currentLocationMarkers.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
 		}, function(){
 			//User has denied location access
 			handleLocationError(true, map.getCenter());
@@ -91,8 +94,8 @@ function createMap(){
 	}
 }
 
-function createMarker(map, pos, title, icon){
-	return new google.maps.Marker({position: pos, map: map, title: title, icon: icon})
+function createMarker(map, pos, title, icon, label){
+	return new google.maps.Marker({position: pos, map: map, title: title, icon: icon,label: label})
 }
 
 function handleLocationError(geolocationInBrowser, position){
@@ -103,5 +106,21 @@ function handleLocationError(geolocationInBrowser, position){
 		console.log("Geolocation not supported. Centering on Ottawa");
 	}
 	map.panTo(position);
-	currentLocationMarkers.push(createMarker(map,position, "Ottawa", currentLocationIcon));
+	currentLocationMarkers.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
 }
+
+addBtn.addEventListener("click", ()=>{
+	if(currentLocationMarkers.length>0){
+		let markerDoesntExist = true;
+
+		//ensuring that the current selected starting point hasnt been previously selected
+		startingPointMarkers.forEach((marker)=>{
+			if(marker.position===currentLocationMarkers[0].position){
+				markerDoesntExist=false;
+				alert("That starting point is already selected");
+			}
+		});
+		if(markerDoesntExist) 
+			startingPointMarkers.push(createMarker(map,currentLocationMarkers[0].position, currentLocationMarkers[0].title, null, (startingPointLabels++).toString(10)));
+	}
+});
