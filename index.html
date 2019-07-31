@@ -5,15 +5,14 @@
 	<!-- Font Awesome -->
 	<link rel="stylesheet" type="text/css" href="static/lib/fontawesome/css/all.css">
 	
+	<!-- Jquery -->
+	<script type="text/javascript" src="static/lib/jquery-3.4.1.min.js"></script>
+
 	<!-- Bootstrap Jquery -->
-	<script type="text/javascript" src="static/lib/bootstrap-4.3.1-dist/js/bootstrap.js"></script>
+	<script type="text/javascript" src="static/lib/bootstrap-4.3.1-dist/js/bootstrap.min.js"></script>
 
 	<!-- Bootsrap Stylesheet -->
 	<link rel="stylesheet" href="static/lib/bootstrap-4.3.1-dist/css/bootstrap.css">
-
-	<!-- Google maps and places API -->
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQcUeMaT3smCV6dLlAhvkHdgYHvXoYpwU&callback=createMap&libraries=places"
-    async defer></script>
 
     <!-- Personal files -->
     <link rel="stylesheet" type="text/css" href="styles.css">
@@ -64,7 +63,32 @@
 		</div>
 	</div>
 	
-	    <script type="text/javascript" src="script.js"></script>
+	<!-- Modal -->
+	<div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        ...
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-primary">Save changes</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<script type="text/javascript" src="script.js"></script>
+
+	<!-- Google maps and places API -->
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQcUeMaT3smCV6dLlAhvkHdgYHvXoYpwU&callback=createMap&libraries=places"
+    async defer></script>
 
 
 </body>
