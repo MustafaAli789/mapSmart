@@ -102,11 +102,12 @@ function createMarker(map, pos, title, icon, label){
 	let infoWindow = new google.maps.InfoWindow({
 		content: " "
 	});
-	marker.addListener("click", function(){
+	marker.addListener("click", function(event){
+		let markerIndex = Number(this.label);
 		let contentString = `
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px;" data-toggle="tooltip" title="Remove" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
+				<button style="margin: 10px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
 				<button style="margin: 10px;" data-toggle="tooltip" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
@@ -167,3 +168,23 @@ showAllBtn.addEventListener("click", ()=>{
 	});
 	map.fitBounds(bounds);
 });
+
+function removeLocation(markerIndex){
+	let position = startingPointMarkers[markerIndex].position;
+	startingPointMarkers.forEach((pos, index)=>{
+		if(pos.position===position){
+			startingPointMarkers[index].setMap(null);
+			startingPointMarkers.splice(index, 1);
+			startingPointLabels-=1;
+
+			//this is to update the labels (reduce all by 1 starting at index of removal)
+			for(var i = index; i<startingPointMarkers.length; i++){
+				let markerLabel = Number(startingPointMarkers[i].label);
+				markerLabel-=1;
+				startingPointMarkers[i].set('label', markerLabel.toString(10));
+			}
+
+
+		}
+	});
+}
