@@ -1,9 +1,12 @@
-var map, infoWindow, destinationMarkers;
+var map, infoWindow;
+var destinationMarkers; //a2d array containing markers and associated place info
 var currentLocation; //an array containing the marker location and place info
 var startingPointMarkers; //a 2d array contianing markers and associated place info
+
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
 const selectDestination = document.getElementById("defaultCheck1");
+
 const addBtn = document.getElementById("addBtn");
 const centerBtn = document.getElementById("centerBtn");
 const showAllBtn = document.getElementById("showAllBtn");
@@ -119,7 +122,7 @@ function createMarker(map, pos, title, icon, label){
 			contentString=`
 			<div class="display-5" style="text-align: center;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px;" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px;" onclick="getCurLocationInfo()" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 			`;
@@ -173,11 +176,11 @@ showAllBtn.addEventListener("click", ()=>{
 		map.fitBounds(bounds);
 });
 
+
 //removes a location if the remove button is clicked
 function removeLocation(markerIndex){
-	let position = startingPointMarkers[markerIndex][0].position;
 	startingPointMarkers.forEach((place, index)=>{
-		if(place[0].position===position){
+		if(place[0].label===markerIndex){
 			startingPointMarkers[index][0].setMap(null);
 			startingPointMarkers.splice(index, 1);
 			startingPointLabels-=1;
@@ -199,4 +202,8 @@ function modalTest(markerIndex){
 		if(place[0].label==markerIndex)
 			document.getElementById("infoModalTitle").textContent=place[0].title;
 	});
+}
+
+function getCurLocationInfo(){
+	document.getElementById("infoModalTitle").textContent=currentLocation[0].title;
 }
