@@ -35,3 +35,16 @@
     }
   }
 }
+
+.infoBox{
+	display: flex;
+    flex-direction: column;
+    margin: 10px 0 10px 0;
+    padding: 10px;
+    border: 1px solid #e8e8e8;
+}
+
+.infoBox img{
+	width: 40px;
+	height: 40px;
+}

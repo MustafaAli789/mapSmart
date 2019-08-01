@@ -112,9 +112,9 @@ function createMarker(map, pos, title, icon, label){
 		let contentString = `
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
-				<button style="margin: 10px;" title="Info" onclick="modalTest(${markerIndex})" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
-				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
+				<button style="margin: 10px; width: 45px;" title="Info" onclick="getStartingPointLocationInfo(${markerIndex})" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
 		//if its a current location marker, does not need remove button as well
@@ -122,8 +122,8 @@ function createMarker(map, pos, title, icon, label){
 			contentString=`
 			<div class="display-5" style="text-align: center;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px;" onclick="getCurLocationInfo()" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
-				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+				<button style="margin: 10px; width: 45px;" onclick="getCurLocationInfo()" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 			`;
 		}
@@ -197,7 +197,7 @@ function removeLocation(markerIndex){
 	});
 }
 
-function modalTest(markerIndex){
+function getStartingPointLocationInfo(markerIndex){
 	startingPointMarkers.forEach((place)=>{
 		if(place[0].label==markerIndex)
 			document.getElementById("infoModalTitle").textContent=place[0].title;
