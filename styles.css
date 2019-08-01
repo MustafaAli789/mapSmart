@@ -9,6 +9,20 @@
 	height: 400px;
 	border-radius: 10px;
 }
+.infoBox img{
+	width: 40px;
+	height: 40px;
+	margin-right: 10px;
+}
+.infoBox div{
+	display: flex;
+	align-items: center;
+}
+.infoBox span{
+	font-size: 12px;
+	width: 100%;
+	word-break: break-all;
+}
 .searchButton{
 	border: none;
 	background: none;
@@ -36,15 +50,4 @@
   }
 }
 
-.infoBox{
-	display: flex;
-    flex-direction: column;
-    margin: 10px 0 10px 0;
-    padding: 10px;
-    border: 1px solid #e8e8e8;
-}
 
-.infoBox img{
-	width: 40px;
-	height: 40px;
-}
