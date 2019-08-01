@@ -1,4 +1,6 @@
-var map, infoWindow, currentLocationMarkers, destinationMarkers, startingPointMarkers;
+var map, infoWindow, destinationMarkers;
+var currentLocation; //an array containing the marker location and place info
+var startingPointMarkers; //a 2d array contianing markers and associated place info
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
 const selectDestination = document.getElementById("defaultCheck1");
@@ -19,7 +21,7 @@ function createMap(){
 	//no markers assigned as of yet
 	startingPointMarkers = []; 
 	destinationMarkers = [];
-	currentLocationMarkers = [];
+	currentLocation = [];
 
 	//biasing the search box to look within the current bounds of the map
 	map.addListener("bounds_changed", function(){
@@ -44,12 +46,10 @@ function createMap(){
 		} else{
 			placesToDisplay = 1;
 
-			//current location is technically only one marker however an array is needed
-			//as on first run, it is not a marker so cant set it to null
-			currentLocationMarkers.forEach((marker)=>{
-				marker.setMap(null);
-			});
-			currentLocationMarkers=[];
+			if(currentLocation.length>0){
+				currentLocation[0].setMap(null);
+			}
+			currentLocation=[];
 		}
 
 		var bounds = new google.maps.LatLngBounds();
@@ -62,7 +62,8 @@ function createMap(){
 			if(selectDestination.checked===true){
 				destinationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null));
 			} else{
-				currentLocationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon, null));
+				currentLocation.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon, null));
+				currentLocation.push(placesFound[i]);
 			}
 
 			//To fit all markers within bounds of map
@@ -86,7 +87,8 @@ function createMap(){
 				lng: pos.coords.longitude
 			};
 			map.panTo(usersPos);
-			currentLocationMarkers.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
+			currentLocation.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
+			currentLocation.push(null);
 		}, function(){
 			//User has denied location access
 			handleLocationError(true, map.getCenter());
@@ -108,7 +110,7 @@ function createMarker(map, pos, title, icon, label){
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
-				<button style="margin: 10px;" title="Info" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px;" title="Info" onclick="modalTest(${markerIndex})" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
@@ -136,56 +138,65 @@ function handleLocationError(geolocationInBrowser, position){
 		console.log("Geolocation not supported. Centering on Ottawa");
 	}
 	map.panTo(position);
-	currentLocationMarkers.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
+	currentLocation.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
+	currentLocation.push(null);
 }
 
 addBtn.addEventListener("click", ()=>{
-	if(currentLocationMarkers.length>0){
+	if(currentLocation.length>0){
 		let markerDoesntExist = true;
 
 		//ensuring that the current selected starting point hasnt been previously selected
-		startingPointMarkers.forEach((marker)=>{
-			if(marker.position===currentLocationMarkers[0].position){
+		startingPointMarkers.forEach((place)=>{
+			if(place[0].position===currentLocation[0].position){
 				markerDoesntExist=false;
 				alert("That starting point is already selected");
 			}
 		});
 		if(markerDoesntExist) 
-			startingPointMarkers.push(createMarker(map,currentLocationMarkers[0].position, currentLocationMarkers[0].title, null, (startingPointLabels++).toString(10)));
+			startingPointMarkers.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1]]);
 	}
 });
 
 //pans the map to the current selected location
 centerBtn.addEventListener("click", ()=>{
-	map.panTo(currentLocationMarkers[0].position);
+	map.panTo(currentLocation[0].position);
 });
 
 //fit all visible markers in the view of the map
 showAllBtn.addEventListener("click", ()=>{
 	let bounds = new google.maps.LatLngBounds();
-	startingPointMarkers.forEach((marker)=>{
-		bounds.extend(marker.position);
+	startingPointMarkers.forEach((place)=>{
+		bounds.extend(place[0].position);
 	});
-	map.fitBounds(bounds);
+	if(startingPointMarkers.length>0)
+		map.fitBounds(bounds);
 });
 
 //removes a location if the remove button is clicked
 function removeLocation(markerIndex){
-	let position = startingPointMarkers[markerIndex].position;
-	startingPointMarkers.forEach((pos, index)=>{
-		if(pos.position===position){
-			startingPointMarkers[index].setMap(null);
+	let position = startingPointMarkers[markerIndex][0].position;
+	startingPointMarkers.forEach((place, index)=>{
+		if(place[0].position===position){
+			startingPointMarkers[index][0].setMap(null);
 			startingPointMarkers.splice(index, 1);
 			startingPointLabels-=1;
 
 			//this is to update the labels (reduce all by 1 starting at index of removal)
 			for(var i = index; i<startingPointMarkers.length; i++){
-				let markerLabel = Number(startingPointMarkers[i].label);
+				let markerLabel = Number(startingPointMarkers[i][0].label);
 				markerLabel-=1;
-				startingPointMarkers[i].set('label', markerLabel.toString(10));
+				startingPointMarkers[i][0].set('label', markerLabel.toString(10));
 			}
 
 
 		}
+	});
+}
+
+function modalTest(markerIndex){
+	startingPointMarkers.forEach((place)=>{
+		if(place[0].label==markerIndex)
+			document.getElementById("infoModalTitle").textContent=place[0].title;
 	});
 }
