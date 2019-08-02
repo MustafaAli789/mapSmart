@@ -1,7 +1,7 @@
 var map, infoWindow;
-var destinationMarkers; //a2d array containing markers and associated place info
+var destinationLocations; //a2d array containing markers and associated place info
 var currentLocation; //an array containing the marker location and place info
-var startingPointMarkers; //a 2d array contianing markers and associated place info
+var startingLocations; //a 2d array contianing markers and associated place info
 
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
@@ -22,8 +22,8 @@ function createMap(){
 	var searchBox = new google.maps.places.SearchBox(input);
 
 	//no markers assigned as of yet
-	startingPointMarkers = []; 
-	destinationMarkers = [];
+	startingLocations = []; 
+	destinationLocations = [];
 	currentLocation = [];
 
 	//biasing the search box to look within the current bounds of the map
@@ -42,10 +42,10 @@ function createMap(){
 		//searching for destination vs starting point
 		if(selectDestination.checked===true){
 			placesToDisplay = placesFound.length;
-			destinationMarkers.forEach((marker)=>{
-				marker.setMap(null); //get rid of map reference from marker
+			destinationLocations.forEach((place)=>{
+				place[0].setMap(null); //get rid of map reference from marker
 			});
-			destinationMarkers=[];
+			destinationLocations=[];
 		} else{
 			placesToDisplay = 1;
 
@@ -63,7 +63,7 @@ function createMap(){
 				return;
 
 			if(selectDestination.checked===true){
-				destinationMarkers.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null));
+				destinationLocations.push([createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null), placesFound[i]]);
 			} else{
 				currentLocation.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon, null));
 				currentLocation.push(placesFound[i]);
@@ -91,7 +91,7 @@ function createMap(){
 			};
 			map.panTo(usersPos);
 			currentLocation.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
-			currentLocation.push(null);
+			currentLocation.push({formatted_address: null});
 		}, function(){
 			//User has denied location access
 			handleLocationError(true, map.getCenter());
@@ -113,7 +113,7 @@ function createMarker(map, pos, title, icon, label){
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
-				<button style="margin: 10px; width: 45px;" title="Info" onclick="getStartingPointLocationInfo(${markerIndex})" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" title="Info" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
@@ -122,7 +122,7 @@ function createMarker(map, pos, title, icon, label){
 			contentString=`
 			<div class="display-5" style="text-align: center;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px; width: 45px;" onclick="getCurLocationInfo()" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 			`;
@@ -142,7 +142,7 @@ function handleLocationError(geolocationInBrowser, position){
 	}
 	map.panTo(position);
 	currentLocation.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
-	currentLocation.push(null);
+	currentLocation.push({formatted_address: null});
 }
 
 addBtn.addEventListener("click", ()=>{
@@ -150,14 +150,14 @@ addBtn.addEventListener("click", ()=>{
 		let markerDoesntExist = true;
 
 		//ensuring that the current selected starting point hasnt been previously selected
-		startingPointMarkers.forEach((place)=>{
+		startingLocations.forEach((place)=>{
 			if(place[0].position===currentLocation[0].position){
 				markerDoesntExist=false;
 				alert("That starting point is already selected");
 			}
 		});
 		if(markerDoesntExist) 
-			startingPointMarkers.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1]]);
+			startingLocations.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1]]);
 	}
 });
 
@@ -169,27 +169,28 @@ centerBtn.addEventListener("click", ()=>{
 //fit all visible markers in the view of the map
 showAllBtn.addEventListener("click", ()=>{
 	let bounds = new google.maps.LatLngBounds();
-	startingPointMarkers.forEach((place)=>{
+	startingLocations.forEach((place)=>{
 		bounds.extend(place[0].position);
 	});
-	if(startingPointMarkers.length>0)
+	if(startingLocations.length>0)
 		map.fitBounds(bounds);
 });
 
 
 //removes a location if the remove button is clicked
 function removeLocation(markerIndex){
-	startingPointMarkers.forEach((place, index)=>{
-		if(place[0].label===markerIndex){
-			startingPointMarkers[index][0].setMap(null);
-			startingPointMarkers.splice(index, 1);
+	debugger;
+	startingLocations.forEach((place, index)=>{
+		if(place[0].label==markerIndex){
+			startingLocations[index][0].setMap(null);
+			startingLocations.splice(index, 1);
 			startingPointLabels-=1;
 
 			//this is to update the labels (reduce all by 1 starting at index of removal)
-			for(var i = index; i<startingPointMarkers.length; i++){
-				let markerLabel = Number(startingPointMarkers[i][0].label);
+			for(var i = index; i<startingLocations.length; i++){
+				let markerLabel = Number(startingLocations[i][0].label);
 				markerLabel-=1;
-				startingPointMarkers[i][0].set('label', markerLabel.toString(10));
+				startingLocations[i][0].set('label', markerLabel.toString(10));
 			}
 
 
@@ -198,12 +199,78 @@ function removeLocation(markerIndex){
 }
 
 function getStartingPointLocationInfo(markerIndex){
-	startingPointMarkers.forEach((place)=>{
+	startingLocations.forEach((place)=>{
 		if(place[0].label==markerIndex)
 			document.getElementById("infoModalTitle").textContent=place[0].title;
 	});
 }
 
-function getCurLocationInfo(){
-	document.getElementById("infoModalTitle").textContent=currentLocation[0].title;
+function setCurLocationInfo(position){
+
+	let place = getLocationInfo(position);
+
+	document.getElementById("infoModalTitle").textContent=place[0].title;
+	
+	if(place[1]===null){
+		document.getElementById("addres").textContent="No address info to display.";
+		document.getElementById("phoneNum").textContent="No phone number info to display.";
+		document.getElementById("website").textContent="No website info to display.";
+		document.getElementById("hours").textContent="No hours info to display.";
+		document.getElementById("rating").textContent="No rating info to display.";
+		return
+	}
+	
+	if(place[1].formatted_address!=null){
+		document.getElementById("addres").textContent=place[1].formatted_address;
+	} else{		
+		document.getElementById("addres").textContent="No address info to display.";
+	}
+
+	if(place[1].formatted_phone_number!=null){
+		document.getElementById("phoneNum").textContent=place[1].formatted_phone_number;
+	} else{		
+		document.getElementById("phoneNum").textContent="No phone number info to display.";
+	}
+
+	if(place[1].website!=null){
+		document.getElementById("website").textContent=place[1].website;
+	} else{		
+		document.getElementById("website").textContent="No website info to display.";
+	}
+
+	if(place[1].opening_hours!=null){
+		if(place[1].opening_hours.weekday_text!=null){
+			document.getElementById("hours").textContent=place[1].opening_hours.weekday_text.flat();
+		} else{
+			document.getElementById("hours").textContent="No hours info to display.";
+
+		}
+	} else{		
+		document.getElementById("hours").textContent="No hours info to display.";
+	}
+
+	if(place[1].rating!=null){
+		document.getElementById("rating").textContent=place[1].rating;
+	} else{		
+		document.getElementById("rating").textContent="No rating info to display.";
+	}
+
 }
+
+//returns a place array with marker and associated place info
+function getLocationInfo(position){
+	let lat = Number(position.substr(0, position.indexOf(',')));
+	let lng = Number(position.substr(position.indexOf(',')+2, position.length-1));
+	if(currentLocation[0].position.lat()===lat && currentLocation[0].position.lng()===lng)
+		return currentLocation;
+	for(var i =0;i<startingLocations.length; i++){
+		if(startingLocations[i][0].position.lat()===lat && startingLocations[i][0].position.lng()===lng)
+			return startingLocations[i];
+	}
+	for(var i = 0; i<destinationLocations.length; i++){
+		if(destinationLocations[i][0].position.lat()===lat && destinationLocations[i][0].position.lng()===lng)
+			return destinationLocations[i];
+	}
+}
+
+
