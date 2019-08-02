@@ -112,11 +112,23 @@ function createMarker(map, pos, title, icon, label){
 		let contentString = `
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation(${markerIndex})" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
 				<button style="margin: 10px; width: 45px;" title="Info" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
+
+		if(icon===destinationIcon){
+			contentString = `
+			<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
+			<div style="display: flex; justify-content: space-around">
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
+				<button style="margin: 10px; width: 45px;" title="Info" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+			</div>
+		`;
+		}
+		
 		//if its a current location marker, does not need remove button as well
 		if(icon===currentLocationIcon){
 			contentString=`
@@ -176,38 +188,31 @@ showAllBtn.addEventListener("click", ()=>{
 		map.fitBounds(bounds);
 });
 
+//removes a marker, requires the lat and lng as "lat, lng" as well as type of location being removed
+function removeLocation(position, typeOfLocation){
+	let place = getLocationInfo(position, typeOfLocation);
+	if(typeOfLocation==="starting"){
+		let indexOfPlace = startingLocations.indexOf(place);
+		startingLocations.splice(startingLocations.indexOf(place), 1);
+		startingPointLabels-=1;
 
-//removes a location if the remove button is clicked
-function removeLocation(markerIndex){
-	debugger;
-	startingLocations.forEach((place, index)=>{
-		if(place[0].label==markerIndex){
-			startingLocations[index][0].setMap(null);
-			startingLocations.splice(index, 1);
-			startingPointLabels-=1;
-
-			//this is to update the labels (reduce all by 1 starting at index of removal)
-			for(var i = index; i<startingLocations.length; i++){
-				let markerLabel = Number(startingLocations[i][0].label);
-				markerLabel-=1;
-				startingLocations[i][0].set('label', markerLabel.toString(10));
-			}
-
-
-		}
-	});
+		//this is to update the labels (reduce all by 1 starting at index of removal)
+		for(var i = indexOfPlace; i<startingLocations.length; i++){
+			let markerLabel = Number(startingLocations[i][0].label);
+			markerLabel-=1;
+			startingLocations[i][0].set('label', markerLabel.toString(10));
+		}	
+		
+	} else if(typeOfLocation==="destination"){
+		destinationLocations.splice(destinationLocations.indexOf(place), 1);
+	}
+	place[0].setMap(null);
 }
 
-function getStartingPointLocationInfo(markerIndex){
-	startingLocations.forEach((place)=>{
-		if(place[0].label==markerIndex)
-			document.getElementById("infoModalTitle").textContent=place[0].title;
-	});
-}
 
 function setCurLocationInfo(position){
 
-	let place = getLocationInfo(position);
+	let place = getLocationInfo(position, null);
 
 	document.getElementById("infoModalTitle").textContent=place[0].title;
 	
@@ -258,17 +263,18 @@ function setCurLocationInfo(position){
 }
 
 //returns a place array with marker and associated place info
-function getLocationInfo(position){
+//type of location is used when you know which type of location to expect
+function getLocationInfo(position, typeOfLocation){
 	let lat = Number(position.substr(0, position.indexOf(',')));
 	let lng = Number(position.substr(position.indexOf(',')+2, position.length-1));
-	if(currentLocation[0].position.lat()===lat && currentLocation[0].position.lng()===lng)
+	if(currentLocation[0].position.lat()===lat && currentLocation[0].position.lng()===lng && (typeOfLocation==="current"||typeOfLocation===null))
 		return currentLocation;
 	for(var i =0;i<startingLocations.length; i++){
-		if(startingLocations[i][0].position.lat()===lat && startingLocations[i][0].position.lng()===lng)
+		if(startingLocations[i][0].position.lat()===lat && startingLocations[i][0].position.lng()===lng && (typeOfLocation==="starting"||typeOfLocation===null))
 			return startingLocations[i];
 	}
 	for(var i = 0; i<destinationLocations.length; i++){
-		if(destinationLocations[i][0].position.lat()===lat && destinationLocations[i][0].position.lng()===lng)
+		if(destinationLocations[i][0].position.lat()===lat && destinationLocations[i][0].position.lng()===lng && (typeOfLocation==="destination"||typeOfLocation===null))
 			return destinationLocations[i];
 	}
 }
