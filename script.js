@@ -113,7 +113,7 @@ function createMarker(map, pos, title, icon, label){
 		<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 		<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
-				<button style="margin: 10px; width: 45px;" title="Info" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" title="Info" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
@@ -123,7 +123,7 @@ function createMarker(map, pos, title, icon, label){
 			<div class="display-5" style="text-align: center; font-weight: bold;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
-				<button style="margin: 10px; width: 45px;" title="Info" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" title="Info" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 		`;
@@ -134,7 +134,7 @@ function createMarker(map, pos, title, icon, label){
 			contentString=`
 			<div class="display-5" style="text-align: center;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
-				<button style="margin: 10px; width: 45px;" onclick="setCurLocationInfo('${marker.position.lat()}, ${marker.position.lng()}')" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
+				<button style="margin: 10px; width: 45px;" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'current')" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 			`;
@@ -209,14 +209,20 @@ function removeLocation(position, typeOfLocation){
 	place[0].setMap(null);
 }
 
+//tales a position in 'lat, lng' as well as a type of location and displays info in the modal
+function setLocationInfoInModal(position, typeOfLocation){
 
-function setCurLocationInfo(position){
-
-	let place = getLocationInfo(position, null);
-
-	document.getElementById("infoModalTitle").textContent=place[0].title;
+	let place = getLocationInfo(position, typeOfLocation);
 	
-	if(place[1]===null){
+	makePlaceDetailsServiceRequest(place[0].title, typeOfLocation);
+
+}
+
+//takes a detailed place object and updates the modal text
+function updateModalContents(place){
+	document.getElementById("infoModalTitle").textContent=place.name;
+	
+	if(place===null){
 		document.getElementById("addres").textContent="No address info to display.";
 		document.getElementById("phoneNum").textContent="No phone number info to display.";
 		document.getElementById("website").textContent="No website info to display.";
@@ -225,27 +231,27 @@ function setCurLocationInfo(position){
 		return
 	}
 	
-	if(place[1].formatted_address!=null){
-		document.getElementById("addres").textContent=place[1].formatted_address;
+	if(place.formatted_address!=null){
+		document.getElementById("addres").textContent=place.formatted_address;
 	} else{		
 		document.getElementById("addres").textContent="No address info to display.";
 	}
 
-	if(place[1].formatted_phone_number!=null){
-		document.getElementById("phoneNum").textContent=place[1].formatted_phone_number;
+	if(place.formatted_phone_number!=null){
+		document.getElementById("phoneNum").textContent=place.formatted_phone_number;
 	} else{		
 		document.getElementById("phoneNum").textContent="No phone number info to display.";
 	}
 
-	if(place[1].website!=null){
-		document.getElementById("website").textContent=place[1].website;
+	if(place.website!=null){
+		document.getElementById("website").textContent=place.website;
 	} else{		
 		document.getElementById("website").textContent="No website info to display.";
 	}
 
-	if(place[1].opening_hours!=null){
-		if(place[1].opening_hours.weekday_text!=null){
-			document.getElementById("hours").textContent=place[1].opening_hours.weekday_text.flat();
+	if(place.opening_hours!=null){
+		if(place.opening_hours.weekday_text!=null){
+			document.getElementById("hours").textContent=place.opening_hours.weekday_text.flat();
 		} else{
 			document.getElementById("hours").textContent="No hours info to display.";
 
@@ -254,12 +260,68 @@ function setCurLocationInfo(position){
 		document.getElementById("hours").textContent="No hours info to display.";
 	}
 
-	if(place[1].rating!=null){
-		document.getElementById("rating").textContent=place[1].rating;
+	if(place.rating!=null){
+		document.getElementById("rating").textContent=place.rating;
 	} else{		
 		document.getElementById("rating").textContent="No rating info to display.";
 	}
+	
+	if(place.photos!=null && place.photos.length>0){
+		setModalPhotos(place.photos);
+	}
+}
 
+//takes an array of photo objects with a method to retrieve their urls and puts them in the modal
+function setModalPhotos(photos){
+	let carousel = document.querySelector(".carousel-inner");
+	carousel.innerHTML="";
+	photos.forEach((photo, index)=>{
+		let photoSrc = photo.getUrl();
+		let newPhoto = document.createElement("div");
+		newPhoto.setAttribute("class", "carousel-item-active");
+		newPhoto.innerHTML =`
+		<img style="object-fit: cover; height: 250px;" class="d-block w-100" src="${photoSrc}" alt="Slide ${index}">
+		`
+		carousel.appendChild(newPhoto);
+	});
+}
+
+//gets detailed location info, takes a search query and type of location for which info is being obtained (ex: starting)
+function makePlaceDetailsServiceRequest(query, typeOfLocation){
+	 let request = {
+		query: query,
+		fields: ['name', 'place_id'],
+	};
+	
+	var service = new google.maps.places.PlacesService(map);
+
+	  service.findPlaceFromQuery(request, function(results, status) {
+		if (status === google.maps.places.PlacesServiceStatus.OK) {
+		  for (var i = 0; i < 1; i++) {
+			let placeId = results[i].place_id;
+			
+			var detailedRequest = {
+				placeId: placeId,
+				fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'rating', 'photo', 'name']
+			};
+			
+			service = new google.maps.places.PlacesService(map);
+			service.getDetails(detailedRequest, (placeDetailed, status)=>{
+				if(typeOfLocation==="current"){
+					currentLocation[1]=placeDetailed;
+					updateModalContents(placeDetailed);
+				} else if(typeOfLocation==="starting"){
+					startingLocations[startingLocations.indexOf(place)][1]=placeDetailed;
+					updateModalContents(placeDetailed);
+				} else if(typeOfLocation==="destination"){
+					destinationLocations[destinationLocations.indexOf(place)][1]=placeDetailed;
+					updateModalContents(placeDetailed);
+				}
+			});			
+		  }
+		}
+	  });
+	
 }
 
 //returns a place array with marker and associated place info

@@ -42,6 +42,10 @@
 	height: 2.5rem;
 	margin: 5px 0 5px 0;
 }
+.carousel{
+	height: 250px;
+    overflow-y: auto;
+}
 @media only screen and (max-width: 992px) {
     .mapRow button{
     	margin: 5px 5px 10px 5px;
