@@ -213,8 +213,8 @@ function removeLocation(position, typeOfLocation){
 function setLocationInfoInModal(position, typeOfLocation){
 
 	let place = getLocationInfo(position, typeOfLocation);
-	
-	makePlaceDetailsServiceRequest(place[0].title, typeOfLocation);
+	let location = new google.maps.LatLng(place[0].position.lat(), place[0].position.lng());
+	makePlaceDetailsServiceRequest(place[0].title, location, typeOfLocation);
 
 }
 
@@ -287,17 +287,46 @@ function setModalPhotos(photos){
 }
 
 //gets detailed location info, takes a search query and type of location for which info is being obtained (ex: starting)
-function makePlaceDetailsServiceRequest(query, typeOfLocation){
+//place is the array containing the marker and associated place info that was clicked
+function makePlaceDetailsServiceRequest(query, loc, typeOfLocation){
 	 let request = {
 		query: query,
-		fields: ['name', 'place_id'],
+		location: loc,
+		radius: 1
 	};
 	
 	var service = new google.maps.places.PlacesService(map);
 
-	  service.findPlaceFromQuery(request, function(results, status) {
+	  service.textSearch(request, function(results, status) {
 		if (status === google.maps.places.PlacesServiceStatus.OK) {
-		  for (var i = 0; i < 1; i++) {
+		  for (var i = 0; i < results.length; i++) {
+			
+			let resultLat = results[i].geometry.location.lat();
+			let resultLng = results[i].geometry.location.lng();
+			let destination = null;
+			let starting = null;
+
+			//ensuring that the place services has found the matching destination or starting point
+			if(typeOfLocation==="destination"){
+
+				destinationLocations.forEach((place)=>{
+					if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
+						destination = place;
+				});
+
+				if(destination===null)
+					continue;
+			} else if(typeOfLocation==="starting"){
+			
+				startingLocations.forEach((place)=>{
+					if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
+						starting = place;
+				});
+
+				if(starting===null)
+					continue;
+			}
+
 			let placeId = results[i].place_id;
 			
 			var detailedRequest = {
@@ -311,13 +340,14 @@ function makePlaceDetailsServiceRequest(query, typeOfLocation){
 					currentLocation[1]=placeDetailed;
 					updateModalContents(placeDetailed);
 				} else if(typeOfLocation==="starting"){
-					startingLocations[startingLocations.indexOf(place)][1]=placeDetailed;
+					startingLocations[startingLocations.indexOf(starting)][1]=placeDetailed;
 					updateModalContents(placeDetailed);
 				} else if(typeOfLocation==="destination"){
-					destinationLocations[destinationLocations.indexOf(place)][1]=placeDetailed;
+					destinationLocations[destinationLocations.indexOf(destination)][1]=placeDetailed;
 					updateModalContents(placeDetailed);
 				}
-			});			
+			});	
+			break; //once place service has matched to a current, starting or destination, no further results are needed
 		  }
 		}
 	  });
