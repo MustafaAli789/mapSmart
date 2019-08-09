@@ -4,6 +4,9 @@
 .titleRow .display-4{
 	text-align: center;
 }
+body{
+	overflow: scroll;
+}
 #map{
 	width: 100%;
 	height: 400px;

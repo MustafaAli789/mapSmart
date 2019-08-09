@@ -173,10 +173,38 @@ addBtn.addEventListener("click", ()=>{
 				alert("That starting point is already selected");
 			}
 		});
-		if(markerDoesntExist) 
+		if(markerDoesntExist) {
 			startingLocations.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1], currentLocation[2]]); 
+			addStartingCard(startingPointLabels-1, currentLocation[0].title);
+		}
 	}
 });
+
+function addStartingCard(label, title){
+	let acordion = document.getElementById("accordion");
+	accordion.innerHTML += `
+		<div class="card">
+			<div class="card-header" id="headingOne">
+				<h5 class="mb-0">
+					<span style = "vertical-align: middle; display: flex; align-items: center;">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${label}" aria-expanded="true" aria-controls="collapse${label}">
+							<i class="far fa-caret-square-down"></i>
+						</button>
+						<h6 id="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
+						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${title}</h6>
+					</span>
+				</h5>
+			</div>
+
+			<div id="collapse${label}" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+				<div class="card-body">
+					Test 123
+				</div>
+			</div>
+		</div>
+	
+	`
+}
 
 //pans the map to the current selected location
 centerBtn.addEventListener("click", ()=>{
