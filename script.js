@@ -18,6 +18,9 @@ function createMap(){
 		center: {lat: 45.4215, lng: -75.6972},
 		zoom: 10
 	});
+	infoWindow = new google.maps.InfoWindow({
+		content: " "
+	});
 	var input = document.getElementById("searchBox");
 	var searchBox = new google.maps.places.SearchBox(input);
 
@@ -108,9 +111,6 @@ function createMap(){
 
 function createMarker(map, pos, title, icon, label){
 	let marker = new google.maps.Marker({position: pos, map: map, title: title, icon: icon,label: label});
-	let infoWindow = new google.maps.InfoWindow({
-		content: " "
-	});
 	marker.addListener("click", function(event){
 		let markerIndex = Number(this.label);
 		let contentString = `
