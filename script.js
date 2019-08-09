@@ -1,7 +1,7 @@
 var map, infoWindow;
-var destinationLocations; //a2d array containing markers and associated place info
-var currentLocation; //an array containing the marker location and place info
-var startingLocations; //a 2d array contianing markers and associated place info
+var destinationLocations; //a2d array containing markers and associated place info as well as if info is cached or not
+var currentLocation; //an array containing the marker location and place info as well as if info is cached or not
+var startingLocations; //a 2d array contianing markers and associated place info as well as if info is cached or not
 
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
@@ -63,10 +63,11 @@ function createMap(){
 				return;
 
 			if(selectDestination.checked===true){
-				destinationLocations.push([createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null), placesFound[i]]);
+				destinationLocations.push([createMarker(map, placesFound[i].geometry.location, placesFound[i].name, destinationIcon, null), placesFound[i], false]);
 			} else{
 				currentLocation.push(createMarker(map, placesFound[i].geometry.location, placesFound[i].name, currentLocationIcon, null));
 				currentLocation.push(placesFound[i]);
+				currentLocation.push(false);
 			}
 
 			//To fit all markers within bounds of map
@@ -85,6 +86,7 @@ function createMap(){
 	//Utilizing HTML5 Geolocation to get users current location
 	if(navigator.geolocation){
 		navigator.geolocation.getCurrentPosition(function(pos){
+			debugger;
 			var usersPos = {
 				lat: pos.coords.latitude,
 				lng: pos.coords.longitude
@@ -92,6 +94,8 @@ function createMap(){
 			map.panTo(usersPos);
 			currentLocation.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
 			currentLocation.push({formatted_address: null});
+			currentLocation.push(false);
+			
 		}, function(){
 			//User has denied location access
 			handleLocationError(true, map.getCenter());
@@ -155,6 +159,7 @@ function handleLocationError(geolocationInBrowser, position){
 	map.panTo(position);
 	currentLocation.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
 	currentLocation.push({formatted_address: null});
+	currentLocation.push(false);
 }
 
 addBtn.addEventListener("click", ()=>{
@@ -169,7 +174,7 @@ addBtn.addEventListener("click", ()=>{
 			}
 		});
 		if(markerDoesntExist) 
-			startingLocations.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1]]);
+			startingLocations.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1], currentLocation[2]]); 
 	}
 });
 
@@ -213,23 +218,35 @@ function removeLocation(position, typeOfLocation){
 function setLocationInfoInModal(position, typeOfLocation){
 
 	let place = getLocationInfo(position, typeOfLocation);
-	let location = new google.maps.LatLng(place[0].position.lat(), place[0].position.lng());
-	makePlaceDetailsServiceRequest(place[0].title, location, typeOfLocation);
+	debugger;
+	
+	//if its true, that means detailed info for that place has already been requested before 
+	if(!place[2]==true){
+		let location = new google.maps.LatLng(place[0].position.lat(), place[0].position.lng());
+		makePlaceDetailsServiceRequest(place[0].title, location, typeOfLocation);
+	} else{
+		updateModalContents(place[1]);
+	}
+	
 
 }
 
 //takes a detailed place object and updates the modal text
 function updateModalContents(place){
-	document.getElementById("infoModalTitle").textContent=place.name;
 	
 	if(place===null){
+		document.getElementById("infoModalTitle").textContent="No name to display";
 		document.getElementById("addres").textContent="No address info to display.";
 		document.getElementById("phoneNum").textContent="No phone number info to display.";
 		document.getElementById("website").textContent="No website info to display.";
 		document.getElementById("hours").textContent="No hours info to display.";
 		document.getElementById("rating").textContent="No rating info to display.";
+		document.querySelector(".carousel-inner").innerHTML=""; //clearing images
 		return
 	}
+	
+	document.getElementById("infoModalTitle").textContent=place.name;
+
 	
 	if(place.formatted_address!=null){
 		document.getElementById("addres").textContent=place.formatted_address;
@@ -306,49 +323,67 @@ function makePlaceDetailsServiceRequest(query, loc, typeOfLocation){
 			let destination = null;
 			let starting = null;
 
-			//ensuring that the place services has found the matching destination or starting point
-			if(typeOfLocation==="destination"){
+			try{
+				//ensuring that the place services has found the matching destination or starting point
+				if(typeOfLocation==="destination"){
 
-				destinationLocations.forEach((place)=>{
-					if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
-						destination = place;
-				});
+					destinationLocations.forEach((place)=>{
+						if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
+							destination = place;
+					});
 
-				if(destination===null)
-					continue;
-			} else if(typeOfLocation==="starting"){
-			
-				startingLocations.forEach((place)=>{
-					if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
-						starting = place;
-				});
+					if(destination===null)
+						continue;
+				} else if(typeOfLocation==="starting"){
+				
+					if(startingLocations.length===1)
+						starting=startingLocations[0];
+					else{
+						startingLocations.forEach((place)=>{
+							if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
+								starting = place;
+						});
+					}
 
-				if(starting===null)
-					continue;
+					if(starting===null)
+						continue;
+				}	
+			}catch(error){
+				console.log(error);
+				alert("Ran into an error, unable to request palce information.");
+				updateModalContents(null);
+				break;
 			}
+
+			
 
 			let placeId = results[i].place_id;
 			
 			var detailedRequest = {
 				placeId: placeId,
-				fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'rating', 'photo', 'name']
+				fields: ['formatted_address', 'formatted_phone_number', 'website', 'opening_hours', 'rating', 'photo', 'name', 'geometry']
 			};
 			
 			service = new google.maps.places.PlacesService(map);
 			service.getDetails(detailedRequest, (placeDetailed, status)=>{
 				if(typeOfLocation==="current"){
 					currentLocation[1]=placeDetailed;
+					currentLocation[2]=true;
 					updateModalContents(placeDetailed);
 				} else if(typeOfLocation==="starting"){
 					startingLocations[startingLocations.indexOf(starting)][1]=placeDetailed;
+					startingLocations[startingLocations.indexOf(starting)][2]=true;
 					updateModalContents(placeDetailed);
 				} else if(typeOfLocation==="destination"){
 					destinationLocations[destinationLocations.indexOf(destination)][1]=placeDetailed;
+					destinationLocations[destinationLocations.indexOf(destination)][2]=true;
 					updateModalContents(placeDetailed);
 				}
 			});	
 			break; //once place service has matched to a current, starting or destination, no further results are needed
 		  }
+		  if(results.length===0)
+			  updateModalContents(null);
 		}
 	  });
 	
