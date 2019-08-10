@@ -2,6 +2,7 @@ var map, infoWindow;
 var destinationLocations; //a2d array containing markers and associated place info as well as if info is cached or not
 var currentLocation; //an array containing the marker location and place info as well as if info is cached or not
 var startingLocations; //a 2d array contianing markers and associated place info as well as if info is cached or not
+var savedPlaces = [];
 
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
@@ -11,7 +12,65 @@ const addBtn = document.getElementById("addBtn");
 const centerBtn = document.getElementById("centerBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 
+var savedLocationIds;
+var locationId; 
+
+if(savedLocationIds!=null)
+	var locationId = savedLocationIds[savedLocationIds.length-1];
+else{
+	savedLocationIds = [];
+	var locationId = 0;
+}
+
 var startingPointLabels = 0;
+
+window.onload= function(){
+	debugger;
+	loadSavedPlaces();
+}
+
+function loadSavedPlaces(){
+	debugger;
+	savedLocationIds = JSON.parse(localStorage.getItem("savedLocationIds"));
+	if(savedLocationIds!=null)
+		locationId = savedLocationIds[savedLocationIds.length-1]+1;
+	else{
+		savedLocationIds = [];
+		locationId = 0;
+	}
+	savedLocationIds.forEach((key)=>{
+		let placeSavedInfo = JSON.parse(localStorage.getItem(key));
+		savedPlaces.push(placeSavedInfo)
+	});
+
+	let accordion = document.getElementById("savedAccordion");
+	if(savedLocationIds.length>0)
+		accordion.innerHTML = "";
+
+	savedLocationIds.forEach((id, i)=>{
+		accordion.innerHTML += `
+		<div class="card">
+			<div class="card-header" id="headingOne">
+				<h5 class="mb-0">
+					<span style = "vertical-align: middle; display: flex; align-items: center;">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${id}" aria-expanded="false" aria-controls="collapse${id}">
+							<i class="far fa-caret-square-down"></i>
+						</button>
+						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${savedPlaces[i][3]}</h6>
+					</span>
+				</h5>
+			</div>
+
+			<div id="collapse${id}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+				<div class="card-body">${savedPlaces[i][2]}</div>
+			</div>
+		</div>
+	
+		`
+	});
+	
+
+}
 
 function createMap(){
 	map = new google.maps.Map(document.getElementById("map"), {
@@ -119,7 +178,7 @@ function createMarker(map, pos, title, icon, label){
 		<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
 				<button style="margin: 10px; width: 45px;" title="Info" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
-				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" onclick="savePlace('${marker.position.lat()}, ${marker.position.lng()}', 'starting')" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 		</div>
 		`;
 
@@ -129,7 +188,7 @@ function createMarker(map, pos, title, icon, label){
 			<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Remove" onclick="removeLocation('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" type="button" class="centerBtn btn btn-outline-dark"><i class="far fa-trash-alt"></i></button>
 				<button style="margin: 10px; width: 45px;" title="Info" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" data-toggle="modal" data-target="#infoModal" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
-				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" onclick="savePlace('${marker.position.lat()}, ${marker.position.lng()}', 'destination')" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 		`;
 		}
@@ -140,7 +199,7 @@ function createMarker(map, pos, title, icon, label){
 			<div class="display-5" style="text-align: center;">${title}</div>
 			<div style="display: flex; justify-content: space-around">
 				<button style="margin: 10px; width: 45px;" onclick="setLocationInfoInModal('${marker.position.lat()}, ${marker.position.lng()}', 'current')" data-toggle="modal" data-target="#infoModal" title="Info" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-question-circle"></i></button>
-				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
+				<button style="margin: 10px; width: 45px;" data-toggle="tooltip" title="Save" type="button" onclick="savePlace('${marker.position.lat()}, ${marker.position.lng()}', 'current')" class="favBtn btn btn-outline-dark"><i class="far fa-star"></i></button>
 			</div>
 			`;
 		}
@@ -226,6 +285,16 @@ showAllBtn.addEventListener("click", ()=>{
 	if(startingLocations.length>0)
 		map.fitBounds(bounds);
 });
+
+//saves the lat, lng, formatted address and place name
+function savePlace(position, typeOfLocation){
+	let place = getLocationInfo(position, typeOfLocation);
+	let basicPlaceInfo = [place[1].geometry.location.lat(), place[1].geometry.location.lng(), place[1].formatted_address, place[0].title];
+	savedLocationIds.push(locationId);
+	localStorage.setItem(locationId, JSON.stringify(basicPlaceInfo));
+	localStorage.setItem("savedLocationIds", JSON.stringify(savedLocationIds));
+	locationId++;
+}
 
 //removes a marker, requires the lat and lng as "lat, lng" as well as type of location being removed
 function removeLocation(position, typeOfLocation){
