@@ -204,7 +204,7 @@ function addStartingCard(label, title){
 
 			<div id="collapse${label}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">
-					Test 123
+					No Route Info To Display
 				</div>
 			</div>
 		</div>
@@ -301,6 +301,7 @@ function updateModalContents(place){
 
 	if(place.website!=null){
 		document.getElementById("website").textContent=place.website;
+		document.getElementById("websiteLink").setAttribute("href", place.website);
 	} else{		
 		document.getElementById("website").textContent="No website info to display.";
 	}

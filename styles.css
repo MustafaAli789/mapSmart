@@ -5,7 +5,7 @@
 	text-align: center;
 }
 body{
-	overflow: scroll;
+	overflow-y: scroll;
 }
 #map{
 	width: 100%;
@@ -55,6 +55,11 @@ body{
     	width: 25%;
     }
   }
+}
+
+.disabled{
+	pointer-events: none;
+	cursor: default;
 }
 
 
