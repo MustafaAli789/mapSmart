@@ -56,15 +56,15 @@ function createSavedPlacesCards(){
 			<div class="card-header" id="headingOne">
 				<h5 class="mb-0">
 					<span style = "vertical-align: middle; display: flex; align-items: center;">
-						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${id}" aria-expanded="false" aria-controls="collapse${id}">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseSaved${id}" aria-expanded="false" aria-controls="collapseSaved${id}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
-						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${savedPlaces[i][3]}</h6>
+						<h6 class="placeTitle" onclick="setCurrentLocation('${savedPlaces[i][0]}, ${savedPlaces[i][1]}', '${savedPlaces[i][3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: initial;">${savedPlaces[i][3]}</h6>
 					</span>
 				</h5>
 			</div>
 
-			<div id="collapse${id}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+			<div id="collapseSaved${id}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">${savedPlaces[i][2]}</div>
 			</div>
 		</div>
@@ -240,6 +240,7 @@ addBtn.addEventListener("click", ()=>{
 		if(markerDoesntExist) {
 			startingLocations.push([createMarker(map,currentLocation[0].position, currentLocation[0].title, null, (startingPointLabels++).toString(10)), currentLocation[1], currentLocation[2]]); 
 			addStartingCard(startingPointLabels-1, currentLocation[0].title);
+			map.panTo(currentLocation[0].position);
 		}
 	}
 });
@@ -257,7 +258,7 @@ function addStartingCard(label, title){
 							<i class="far fa-caret-square-down"></i>
 						</button>
 						<h6 class="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
-						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${title}</h6>
+						<h6 class="placeTitle" onclick="centerOnStartingLocation(${label})" style="margin-left:10px; margin-top: 0.4rem; text-align: initial;">${title}</h6>
 					</span>
 				</h5>
 			</div>
@@ -270,6 +271,17 @@ function addStartingCard(label, title){
 		</div>
 	
 	`
+}
+
+//when clicking on title of starting location card, center map on that location
+function centerOnStartingLocation(startingLabel){
+	debugger;
+	for(let i =0; i<startingLocations.length; i++){
+		if(startingLocations[i][0].label==startingLabel){
+			map.panTo(startingLocations[i][0].position);
+			break;
+		}
+	}
 }
 
 //pans the map to the current selected location
@@ -289,7 +301,20 @@ showAllBtn.addEventListener("click", ()=>{
 
 //saves the lat, lng, formatted address and place name
 function savePlace(position, typeOfLocation){
+	debugger;
 	let place = getLocationInfo(position, typeOfLocation);
+	let placeExists = false;
+
+	savedPlaces.forEach((savedPlace)=>{
+		if(place[1].geometry.location.lat()===savedPlace[0] && place[1].geometry.location.lng()===savedPlace[1]){
+			alert("The location " + place[0].title + " is already saved.");
+			placeExists= true;
+		}
+	});
+
+	if(placeExists)
+		return;
+
 	let basicPlaceInfo = [place[1].geometry.location.lat(), place[1].geometry.location.lng(), place[1].formatted_address, place[0].title];
 	savedLocationIds.push(locationId);
 	localStorage.setItem(locationId, JSON.stringify(basicPlaceInfo));
@@ -308,7 +333,8 @@ function savePlace(position, typeOfLocation){
 						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${locationId}" aria-expanded="false" aria-controls="collapse${locationId}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
-						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${basicPlaceInfo[3]}</h6>
+						<h6 class="placeTitle" onclick="setCurrentLocation('${basicPlaceInfo[0]}, ${basicPlaceInfo[1]}', '${basicPlaceInfo[3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: inital;">${basicPlaceInfo[3]}</h6>
+						<button id="addBtn" data-toggle="tooltip" title="Add" type="button" class="addBtn btn btn-outline-dark"><i class="fas fa-plus"></i></button>
 					</span>
 				</h5>
 			</div>
@@ -321,6 +347,17 @@ function savePlace(position, typeOfLocation){
 		`
 
 	locationId++;
+
+}
+
+function setCurrentLocation(position, title){
+	let lat = Number(position.substr(0, position.indexOf(',')));
+	let lng = Number(position.substr(position.indexOf(',')+2, position.length-1));
+	currentLocation[0].setMap(null);
+	currentLocation = [];
+	let location = new google.maps.LatLng(lat, lng);
+	currentLocation.push(createMarker(map, location, title, currentLocationIcon, null), null, false);
+	makePlaceDetailsServiceRequest(title, location, "current");
 
 }
 

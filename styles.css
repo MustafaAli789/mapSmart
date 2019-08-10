@@ -61,5 +61,8 @@ body{
 	pointer-events: none;
 	cursor: default;
 }
+.placeTitle:hover{
+	cursor: pointer;
+}
 
 
