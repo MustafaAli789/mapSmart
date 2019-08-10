@@ -377,14 +377,12 @@ function makePlaceDetailsServiceRequest(query, loc, typeOfLocation){
 						continue;
 				} else if(typeOfLocation==="starting"){
 				
-					if(startingLocations.length===1)
-						starting=startingLocations[0];
-					else{
-						startingLocations.forEach((place)=>{
+					
+					startingLocations.forEach((place)=>{
 							if(place[1].geometry.location.lat()===resultLat && place[1].geometry.location.lng()===resultLng)
 								starting = place;
-						});
-					}
+					});
+			
 
 					if(starting===null)
 						continue;
