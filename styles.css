@@ -64,5 +64,13 @@ body{
 .placeTitle:hover{
 	cursor: pointer;
 }
+.savedBtn{
+    padding: 0;
+    height: 15px;
+    width: 15px;
+    display: flex;
+    justify-content: center;
+    margin-left: auto;
+}
 
 

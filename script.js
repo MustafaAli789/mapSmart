@@ -2,7 +2,7 @@ var map, infoWindow;
 var destinationLocations; //a2d array containing markers and associated place info as well as if info is cached or not
 var currentLocation; //an array containing the marker location and place info as well as if info is cached or not
 var startingLocations; //a 2d array contianing markers and associated place info as well as if info is cached or not
-var savedPlaces = [];
+var savedPlaces;
 
 var currentLocationIcon = "static/icons/currentLocationIcon.png";
 var destinationIcon = "static/icons/destinationIcon.png";
@@ -12,16 +12,6 @@ const addBtn = document.getElementById("addBtn");
 const centerBtn = document.getElementById("centerBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 
-var savedLocationIds;
-var locationId; 
-
-if(savedLocationIds!=null)
-	var locationId = savedLocationIds[savedLocationIds.length-1];
-else{
-	savedLocationIds = [];
-	var locationId = 0;
-}
-
 var startingPointLabels = 0;
 
 window.onload= function(){
@@ -30,47 +20,60 @@ window.onload= function(){
 }
 
 function loadSavedPlaces(){
-	debugger;
-	savedLocationIds = JSON.parse(localStorage.getItem("savedLocationIds"));
-	if(savedLocationIds!=null)
-		locationId = savedLocationIds[savedLocationIds.length-1]+1;
-	else{
-		savedLocationIds = [];
-		locationId = 0;
-	}
-	savedLocationIds.forEach((key)=>{
-		let placeSavedInfo = JSON.parse(localStorage.getItem(key));
-		savedPlaces.push(placeSavedInfo)
-	});
+	savedPlaces = JSON.parse(localStorage.getItem("savedPlaces"));
+	if(savedPlaces==null)
+		savedPlaces=[];
+
 	createSavedPlacesCards();
 }
 
 function createSavedPlacesCards(){
 	let accordion = document.getElementById("savedAccordion");
-	if(savedLocationIds.length>0)
+	if(savedPlaces.length>0)
 		accordion.innerHTML = "";
 
-	savedLocationIds.forEach((id, i)=>{
+	savedPlaces.forEach((placeBasicInfo, i)=>{
 		accordion.innerHTML += `
-		<div class="card">
+		<div class="card" id="${i}">
 			<div class="card-header" id="headingOne">
 				<h5 class="mb-0">
 					<span style = "vertical-align: middle; display: flex; align-items: center;">
-						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseSaved${id}" aria-expanded="false" aria-controls="collapseSaved${id}">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseSaved${i}" aria-expanded="false" aria-controls="collapseSaved${i}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
 						<h6 class="placeTitle" onclick="setCurrentLocation('${savedPlaces[i][0]}, ${savedPlaces[i][1]}', '${savedPlaces[i][3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: initial;">${savedPlaces[i][3]}</h6>
+						<button data-toggle="tooltip" title="Remove" type="button" onclick="removeSavedLocation(${i})" class="savedBtn btn btn-outline-dark"><i class="far fa-trash-alt" style="font-size: 10px;"></i></button>
 					</span>
 				</h5>
 			</div>
 
-			<div id="collapseSaved${id}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+			<div id="collapseSaved${i}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">${savedPlaces[i][2]}</div>
 			</div>
 		</div>
 	
 		`
 	});
+}
+
+
+function removeSavedLocation(index){
+	savedPlaces.splice(index, 1);
+	if(savedPlaces.length===0)
+		savedPlaces=null;
+	localStorage.setItem("savedPlaces", JSON.stringify(savedPlaces));
+	let cardToDel = document.getElementById(index);
+	cardToDel.parentElement.removeChild(cardToDel);
+	if(savedPlaces===null){
+		document.getElementById("savedAccordion").innerHTML=`
+			<div class="card border-light mb-3">
+  				<div class="card-header d-flex align-items-center justify-content-center" style="border-bottom: 0; height: 63px;"><i class="far fa-folder-open" style="font-size: 1.5rem">...</i>
+  				</div>
+			</div>
+
+		`
+	}
+
 }
 
 function createMap(){
@@ -301,12 +304,14 @@ showAllBtn.addEventListener("click", ()=>{
 
 //saves the lat, lng, formatted address and place name
 function savePlace(position, typeOfLocation){
-	debugger;
 	let place = getLocationInfo(position, typeOfLocation);
 	let placeExists = false;
 
+	if(savedPlaces===null)
+		savedPlaces=[];
+
 	savedPlaces.forEach((savedPlace)=>{
-		if(place[1].geometry.location.lat()===savedPlace[0] && place[1].geometry.location.lng()===savedPlace[1]){
+		if(place[0].position.lat()===savedPlace[0] && place[0].position.lng()===savedPlace[1]){
 			alert("The location " + place[0].title + " is already saved.");
 			placeExists= true;
 		}
@@ -315,39 +320,35 @@ function savePlace(position, typeOfLocation){
 	if(placeExists)
 		return;
 
-	let basicPlaceInfo = [place[1].geometry.location.lat(), place[1].geometry.location.lng(), place[1].formatted_address, place[0].title];
-	savedLocationIds.push(locationId);
-	localStorage.setItem(locationId, JSON.stringify(basicPlaceInfo));
-	localStorage.setItem("savedLocationIds", JSON.stringify(savedLocationIds));
+	let basicPlaceInfo = [place[0].position.lat(), place[0].position.lng(), place[1].formatted_address, place[0].title];
+	savedPlaces.push(basicPlaceInfo);
+	localStorage.setItem("savedPlaces", JSON.stringify(savedPlaces));
 	
 	let accordion = document.getElementById("savedAccordion");
-	if(savedLocationIds.length===1)
+	if(savedPlaces.length===1)
 		accordion.innerHTML = "";
 
 	
 	accordion.innerHTML += `
-		<div class="card">
+		<div class="card" id="${savedPlaces.length-1}">
 			<div class="card-header" id="headingOne">
 				<h5 class="mb-0">
 					<span style = "vertical-align: middle; display: flex; align-items: center;">
-						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${locationId}" aria-expanded="false" aria-controls="collapse${locationId}">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${savedPlaces.length-1}" aria-expanded="false" aria-controls="collapse${savedPlaces.length-1}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
 						<h6 class="placeTitle" onclick="setCurrentLocation('${basicPlaceInfo[0]}, ${basicPlaceInfo[1]}', '${basicPlaceInfo[3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: inital;">${basicPlaceInfo[3]}</h6>
-						<button id="addBtn" data-toggle="tooltip" title="Add" type="button" class="addBtn btn btn-outline-dark"><i class="fas fa-plus"></i></button>
-					</span>
+						<button data-toggle="tooltip" title="Remove" type="button" onclick="removeSavedLocation(${savedPlaces.length-1})" class="savedBtn btn btn-outline-dark"><i class="far fa-trash-alt" style="font-size: 10px;"></i></button>
+						</span>
 				</h5>
 			</div>
 
-			<div id="collapse${locationId}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+			<div id="collapse${savedPlaces.length-1}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">${basicPlaceInfo[2]}</div>
 			</div>
 		</div>
 	
 		`
-
-	locationId++;
-
 }
 
 function setCurrentLocation(position, title){
