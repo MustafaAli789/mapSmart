@@ -42,7 +42,10 @@ function loadSavedPlaces(){
 		let placeSavedInfo = JSON.parse(localStorage.getItem(key));
 		savedPlaces.push(placeSavedInfo)
 	});
+	createSavedPlacesCards();
+}
 
+function createSavedPlacesCards(){
 	let accordion = document.getElementById("savedAccordion");
 	if(savedLocationIds.length>0)
 		accordion.innerHTML = "";
@@ -68,8 +71,6 @@ function loadSavedPlaces(){
 	
 		`
 	});
-	
-
 }
 
 function createMap(){
@@ -293,7 +294,34 @@ function savePlace(position, typeOfLocation){
 	savedLocationIds.push(locationId);
 	localStorage.setItem(locationId, JSON.stringify(basicPlaceInfo));
 	localStorage.setItem("savedLocationIds", JSON.stringify(savedLocationIds));
+	
+	let accordion = document.getElementById("savedAccordion");
+	if(savedLocationIds.length===1)
+		accordion.innerHTML = "";
+
+	
+	accordion.innerHTML += `
+		<div class="card">
+			<div class="card-header" id="headingOne">
+				<h5 class="mb-0">
+					<span style = "vertical-align: middle; display: flex; align-items: center;">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${locationId}" aria-expanded="false" aria-controls="collapse${locationId}">
+							<i class="far fa-caret-square-down"></i>
+						</button>
+						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${basicPlaceInfo[3]}</h6>
+					</span>
+				</h5>
+			</div>
+
+			<div id="collapse${locationId}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+				<div class="card-body">${basicPlaceInfo[2]}</div>
+			</div>
+		</div>
+	
+		`
+
 	locationId++;
+
 }
 
 //removes a marker, requires the lat and lng as "lat, lng" as well as type of location being removed
