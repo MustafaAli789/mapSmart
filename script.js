@@ -97,7 +97,8 @@ function createMap(){
 			map.panTo(usersPos);
 			currentLocation.push(createMarker(map,usersPos, "Your Location", currentLocationIcon, null));
 			currentLocation.push({formatted_address: null});
-			currentLocation.push(false);
+			currentLocation.push(true);
+			makePlaceDetailsServiceRequest("Your Location", new google.maps.LatLng(usersPos.lat, usersPos.lng), "current");
 			
 		}, function(){
 			//User has denied location access
@@ -157,9 +158,12 @@ function handleLocationError(geolocationInBrowser, position){
 		console.log("Geolocation not supported. Centering on Ottawa");
 	}
 	map.panTo(position);
+	debugger;
 	currentLocation.push(createMarker(map,position, "Ottawa", currentLocationIcon, null));
 	currentLocation.push({formatted_address: null});
-	currentLocation.push(false);
+	currentLocation.push(true);
+	makePlaceDetailsServiceRequest("Ottawa", new google.maps.LatLng(position.lat, position.lng), "current");
+			
 }
 
 addBtn.addEventListener("click", ()=>{
@@ -181,22 +185,24 @@ addBtn.addEventListener("click", ()=>{
 });
 
 function addStartingCard(label, title){
-	let acordion = document.getElementById("accordion");
+	let accordion = document.getElementById("accordion");
+	if(startingLocations.length===1)
+		accordion.innerHTML = "";
 	accordion.innerHTML += `
-		<div class="card">
+		<div class="card startingPointCard">
 			<div class="card-header" id="headingOne">
 				<h5 class="mb-0">
 					<span style = "vertical-align: middle; display: flex; align-items: center;">
-						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${label}" aria-expanded="true" aria-controls="collapse${label}">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${label}" aria-expanded="false" aria-controls="collapse${label}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
-						<h6 id="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
+						<h6 class="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
 						<h6 id="placeTitle" style="margin-left:10px; margin-top: 0.4rem;">${title}</h6>
 					</span>
 				</h5>
 			</div>
 
-			<div id="collapse${label}" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+			<div id="collapse${label}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">
 					Test 123
 				</div>
@@ -227,13 +233,18 @@ function removeLocation(position, typeOfLocation){
 	if(typeOfLocation==="starting"){
 		let indexOfPlace = startingLocations.indexOf(place);
 		startingLocations.splice(startingLocations.indexOf(place), 1);
+		document.querySelectorAll(".startingPointCard")[indexOfPlace].parentElement.removeChild(document.querySelectorAll(".startingPointCard")[indexOfPlace]);
 		startingPointLabels-=1;
+
+
+		let labelsInLocationCards = document.querySelectorAll(".placeLabel");
 
 		//this is to update the labels (reduce all by 1 starting at index of removal)
 		for(var i = indexOfPlace; i<startingLocations.length; i++){
 			let markerLabel = Number(startingLocations[i][0].label);
 			markerLabel-=1;
 			startingLocations[i][0].set('label', markerLabel.toString(10));
+			labelsInLocationCards[i].textContent=markerLabel;
 		}	
 		
 	} else if(typeOfLocation==="destination"){
@@ -313,6 +324,8 @@ function updateModalContents(place){
 	
 	if(place.photos!=null && place.photos.length>0){
 		setModalPhotos(place.photos);
+	} else{
+		document.querySelector(".carousel-inner").innerHTML="";
 	}
 }
 
