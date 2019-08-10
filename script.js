@@ -9,6 +9,7 @@ var destinationIcon = "static/icons/destinationIcon.png";
 const selectDestination = document.getElementById("defaultCheck1");
 
 const addBtn = document.getElementById("addBtn");
+const saveBtn = document.getElementById("saveBtn");
 const centerBtn = document.getElementById("centerBtn");
 const showAllBtn = document.getElementById("showAllBtn");
 
@@ -41,7 +42,7 @@ function createSavedPlacesCards(){
 						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseSaved${i}" aria-expanded="false" aria-controls="collapseSaved${i}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
-						<h6 class="placeTitle" onclick="setCurrentLocation('${savedPlaces[i][0]}, ${savedPlaces[i][1]}', '${savedPlaces[i][3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: initial;">${savedPlaces[i][3]}</h6>
+						<h6 class="placeTitle" onclick="setCurrentLocation('${savedPlaces[i][0]}, ${savedPlaces[i][1]}', '${savedPlaces[i][3]}')" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${savedPlaces[i][3]}</h6>
 						<button data-toggle="tooltip" title="Remove" type="button" onclick="removeSavedLocation(${i})" class="savedBtn btn btn-outline-dark"><i class="far fa-trash-alt" style="font-size: 10px;"></i></button>
 					</span>
 				</h5>
@@ -248,6 +249,10 @@ addBtn.addEventListener("click", ()=>{
 	}
 });
 
+saveBtn.addEventListener("click", ()=>{
+	savePlace(`${currentLocation[0].position.lat()}, ${currentLocation[0].position.lng()}`, "current");
+});
+
 function addStartingCard(label, title){
 	let accordion = document.getElementById("accordion");
 	if(startingLocations.length===1)
@@ -261,7 +266,7 @@ function addStartingCard(label, title){
 							<i class="far fa-caret-square-down"></i>
 						</button>
 						<h6 class="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
-						<h6 class="placeTitle" onclick="centerOnStartingLocation(${label})" style="margin-left:10px; margin-top: 0.4rem; text-align: initial;">${title}</h6>
+						<h6 class="placeTitle" onclick="centerOnStartingLocation(${label})" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${title}</h6>
 					</span>
 				</h5>
 			</div>
