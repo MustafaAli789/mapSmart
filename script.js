@@ -587,3 +587,130 @@ function getLocationInfo(position, typeOfLocation){
 }
 
 
+function addStartingCard(label, title){
+	let accordion = document.getElementById("accordion");
+	if(startingLocations.length===1)
+		accordion.innerHTML = "";
+	accordion.innerHTML += `
+		<div class="card startingPointCard">
+			<div class="card-header" id="headingOne">
+				<h5 class="mb-0">
+					<span style = "vertical-align: middle; display: flex; align-items: center;">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapse${label}" aria-expanded="false" aria-controls="collapse${label}">
+							<i class="far fa-caret-square-down"></i>
+						</button>
+						<h6 class="placeLabel" style="margin-left:10px; margin-top: 0.4rem;">${label}</h6>
+						<h6 class="placeTitle" onclick="centerOnStartingLocation(${label})" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${title}</h6>
+					</span>
+				</h5>
+			</div>
+
+			<div id="collapse${label}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+				<div class="card-body">
+					No Route Info To Display
+				</div>
+			</div>
+		</div>
+	
+	`
+}
+
+
+function addDestinationCards(destinationsInfo){
+	let accordion = document.getElementById("accordion");
+	if(startingLocations.length===1)
+		accordion.innerHTML="";
+	let tmpHTML = accordion.innerHTML;
+	let destinationCardsHTML = "";
+
+	
+	destinationCardsHTML+=`
+
+		<div class="card" style="background-color: gold;">
+			<div class="card-header" id="headingOne">
+				<h5 class="mb-0">
+					<span style = "vertical-align: middle; display: flex; align-items: center;">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseDestination" aria-expanded="false" aria-controls="#collapseDestination">
+							<i class="far fa-caret-square-down"></i>
+						</button>
+						<h6 class="placeTitle" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${destinationsInfo[0][0].title}</h6>
+					</span>
+				</h5>
+			</div>
+
+			<div id="collapseDestination" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+				<div class="card-body">
+					No Route Info To Display
+				</div>
+			</div>
+		</div>
+
+
+		`
+	accordion.innerHTML=destinationCardsHTML+tmpHTML;
+}
+
+function getBestDestination(distanceAndDurationInfo, typeOfCalculation){
+
+		for(let i =0; i<distanceAndDurationInfo.length; i++){
+			if(distanceAndDurationInfo[i].length!=startingLocations.length+1)
+				return;
+		}
+		if(typeOfCalculation==="distance"){
+			let distanceAverages = [];
+			distanceAndDurationInfo.forEach((destinationTravelInfo, i)=>{
+				let distanceSum = 0;
+				destinationTravelInfo.forEach((startingPointTravelToDestinationInfo, j)=>{
+					if(j!=0){//this is because the first index is always the destination itself
+						distanceSum+=startingPointTravelToDestinationInfo[3];
+					} 
+				});
+				distanceAverages.push(distanceSum/startingLocations.length);
+			});
+			debugger;
+			let minIndex = distanceAverages.indexOf(Math.min(...distanceAverages));			
+			addDestinationCards(distanceAndDurationInfo[minIndex]);
+		}
+	
+}
+
+function makeDistanceMatrixRequest(typeOfCalculation){
+
+	if(!(startingLocations.length>0) || !(destinationLocations.length>0))
+		return;
+
+	let distanceAndDurationInfo = [];
+
+	let service = new google.maps.DistanceMatrixService();
+
+	destinationLocations.forEach((destination, i)=>{
+		distanceAndDurationInfo.push([destination]);
+		startingLocations.forEach((starting)=>{
+			let starting1 = new google.maps.LatLng(starting[0].position.lat(), starting[0].position.lng());
+			let destination1 = new google.maps.LatLng(destination[0].position.lat(), destination[0].position.lng());
+			
+			service.getDistanceMatrix(
+			  {
+			    origins: [starting1],
+			    destinations: [destination1],
+			    travelMode: 'DRIVING',
+			    unitSystem: google.maps.UnitSystem.METRIC,
+			    avoidHighways: false,
+			    avoidTolls: false,
+			  }, function(response, status){
+			  		if(status!='OK'){
+			  			alert("Error calculating. Error was " + status+".");
+			  		} else{
+			  			let durationValue = response.rows[0].elements[0].duration.value;
+			  			let durationText = response.rows[0].elements[0].duration.text;
+			  			let distanceValue = response.rows[0].elements[0].distance.value;
+			  			let distanceText = response.rows[0].elements[0].distance.text;
+			  			distanceAndDurationInfo[i].push([starting, durationValue, durationText, distanceValue, distanceText]);
+			  			getBestDestination(distanceAndDurationInfo, typeOfCalculation);
+			  		}
+			  });
+
+		});
+	});
+}
+
