@@ -615,6 +615,16 @@ function addStartingCard(label, title){
 	`
 }
 
+//will center map on destination after clicing on its title 
+function centerOnDestination(location, typeOfLocation){
+	debugger;
+	let destination = getLocationInfo(location, typeOfLocation);
+	destinationLocations.forEach((place)=>{
+		if(place[0].position===destination[0].position)
+			map.panTo(place[0].position);
+	});
+}
+
 
 function addDestinationCards(destinationsInfo){
 	let accordion = document.getElementById("accordion");
@@ -623,30 +633,60 @@ function addDestinationCards(destinationsInfo){
 	let tmpHTML = accordion.innerHTML;
 	let destinationCardsHTML = "";
 
-	
-	destinationCardsHTML+=`
+	destinationsInfo.forEach((destinationInfo, distanceRank)=>{
+		let color = "";
+		if(distanceRank===0)
+			color="green";
+		else if(distanceRank===1)
+			color="orange";
+		else
+			color="red";
+		
+		destinationCardsHTML+=`
 
-		<div class="card" style="background-color: gold;">
-			<div class="card-header" id="headingOne">
+		<div class="card">
+			<div class="card-header" id="headingOne" style="background-color: ${color};">
 				<h5 class="mb-0">
 					<span style = "vertical-align: middle; display: flex; align-items: center;">
-						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseDestination" aria-expanded="false" aria-controls="#collapseDestination">
+						<button class="btn btn-link" data-toggle="collapse" data-target="#collapseDestination${distanceRank}" aria-expanded="false" aria-controls="#collapseDestination${distanceRank}">
 							<i class="far fa-caret-square-down"></i>
 						</button>
-						<h6 class="placeTitle" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${destinationsInfo[0][0].title}</h6>
+						<h6 class="placeTitle" onclick="centerOnDestination('${destinationInfo[0][0].position.lat()}, ${destinationInfo[0][0].position.lng()}', 'destination')" style="margin-left:10px; margin-top: 0.4rem; text-align: start;">${destinationInfo[0][0].title}</h6>
 					</span>
 				</h5>
 			</div>
 
-			<div id="collapseDestination" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+			<div id="collapseDestination${distanceRank}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
 				<div class="card-body">
-					No Route Info To Display
+					${destinationInfo[0][1].formatted_address}
 				</div>
 			</div>
 		</div>
 
 
 		`
+		
+	});
+	
+	debugger;
+	let destinationsToRemove = [];
+	destinationLocations.forEach((destination, index)=>{
+		let destinationSelected = false;
+		destinationsInfo.forEach((destinationInfo)=>{
+			if(destinationInfo[0]===destination){
+				destinationSelected = true;;
+			};
+		});
+		if(!destinationSelected){
+			destination[0].setMap(null);
+			destinationsToRemove.push(destination);
+		}
+	});
+	
+	destinationsToRemove.forEach((destination)=>{
+		destinationLocations.splice(destinationLocations.indexOf(destination), 1);
+	});
+	
 	accordion.innerHTML=destinationCardsHTML+tmpHTML;
 }
 
@@ -668,8 +708,16 @@ function getBestDestination(distanceAndDurationInfo, typeOfCalculation){
 				distanceAverages.push(distanceSum/startingLocations.length);
 			});
 			debugger;
-			let minIndex = distanceAverages.indexOf(Math.min(...distanceAverages));			
-			addDestinationCards(distanceAndDurationInfo[minIndex]);
+			let distanceAveragesCopy = distanceAverages.slice();
+			distanceAveragesCopy.sort();
+			let shortestDistancePlaces=[];
+			for(let i = 0; i<3; i++){
+				if(distanceAverages.length>=i){
+					shortestDistancePlaces.push(distanceAndDurationInfo[distanceAverages.indexOf(distanceAveragesCopy[i])]);
+				}	
+			}
+			debugger;
+			addDestinationCards(shortestDistancePlaces);
 		}
 	
 }
